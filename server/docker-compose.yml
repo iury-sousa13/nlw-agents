@@ -1,0 +1,13 @@
+services:
+  nlw-agents-database:
+    container_name: nlw-agents-database
+    image: pgvector/pgvector:pg17
+    restart: always
+    environment:
+      POSTGRES_DB: nlw-agents
+      POSTGRES_PASSWORD: nlw-agents
+      POSTGRES_USER: nlw-agents
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./docker/setup.sql:/docker-entrypoint-initdb.d/setup.sql

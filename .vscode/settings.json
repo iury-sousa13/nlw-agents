@@ -1,0 +1,11 @@
+{
+  "editor.codeActionsOnSave": {
+    "source.fixAll.biome": "explicit",
+    "source.organizeImports.biome": "explicit"
+  },
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "biomejs.biome",
+  "biome.lsp.bin": {
+    "win32-x64": "server/node_modules/.pnpm/@biomejs+biome@2.0.6/node_modules/@biomejs/cli-win32-x64/biome.exe"
+  }
+}
