@@ -1,5 +1,7 @@
-import { rooms } from "./rooms";
+import { questions } from './questions';
+import { rooms } from './rooms';
 
 export const schema = {
-	rooms,
+  rooms,
+  questions,
 };

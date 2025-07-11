@@ -1,12 +1,11 @@
 import { fastifyCors } from '@fastify/cors';
 import { fastify } from 'fastify';
-import {
-  serializerCompiler,
-  validatorCompiler,
-  type ZodTypeProvider,
-} from 'fastify-type-provider-zod';
+import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from 'fastify-type-provider-zod';
 import { env } from './env';
-import { getRoomsRoutes } from './http/routes/get-rooms.routes';
+import { createQuestionsRoutes } from './http/routes/create-question.route';
+import { createRoomRoutes } from './http/routes/create-room.route';
+import { getRoomQuestionsRoutes } from './http/routes/get-room-questions.route';
+import { getRoomsRoutes } from './http/routes/get-rooms.route';
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 
@@ -22,6 +21,9 @@ app.get('/health', () => {
 });
 
 app.register(getRoomsRoutes);
+app.register(createRoomRoutes);
+app.register(getRoomQuestionsRoutes);
+app.register(createQuestionsRoutes);
 
 app
   .listen({ port: env.PORT })
