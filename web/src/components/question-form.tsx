@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -21,7 +22,38 @@ interface QuestionFormProps {
   roomId: string;
 }
 
+type CreateQuestionRequest = {
+  question: string;
+};
+
+type CreateQuestionResponse = {
+  questionId: string;
+};
+
+export function useCreateQuestion(roomId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: CreateQuestionRequest) => {
+      const response = await fetch(`http://localhost:3333/rooms/${roomId}/questions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result: CreateQuestionResponse = await response.json();
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['get-questions', roomId] });
+    },
+  });
+}
+
 export function QuestionForm({ roomId }: QuestionFormProps) {
+  const { mutateAsync: createQuestion } = useCreateQuestion(roomId);
   const form = useForm<CreateQuestionFormData>({
     resolver: zodResolver(createQuestionSchema),
     defaultValues: {
@@ -29,9 +61,8 @@ export function QuestionForm({ roomId }: QuestionFormProps) {
     },
   });
 
-  function handleCreateQuestion(data: CreateQuestionFormData) {
-    // biome-ignore lint/suspicious/noConsole: dev
-    console.log(data, roomId);
+  async function handleCreateQuestion(data: CreateQuestionFormData) {
+    await createQuestion(data);
   }
 
   return (
