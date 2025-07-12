@@ -28,7 +28,16 @@ type CreateQuestionRequest = {
 
 type CreateQuestionResponse = {
   questionId: string;
+  answer: string;
 };
+
+export type GetRoomQuestionsResponse = Array<{
+  id: string;
+  question: string;
+  answer: string | null;
+  createdAt: string;
+  isGeneratingAnswer?: boolean;
+}>;
 
 export function useCreateQuestion(roomId: string) {
   const queryClient = useQueryClient();
@@ -46,9 +55,57 @@ export function useCreateQuestion(roomId: string) {
       const result: CreateQuestionResponse = await response.json();
       return result;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['get-questions', roomId] });
+    onMutate({ question }) {
+      const questions = queryClient.getQueryData<GetRoomQuestionsResponse>(['get-questions', roomId]);
+
+      const questionsArray = questions ?? [];
+
+      const newQuestion = {
+        id: crypto.randomUUID(),
+        question,
+        answer: null,
+        createdAt: new Date().toISOString(),
+        isGeneratingAnswer: true,
+      };
+
+      queryClient.setQueryData<GetRoomQuestionsResponse>(['get-questions', roomId], [newQuestion, ...questionsArray]);
+
+      return { newQuestion, questions };
     },
+
+    onSuccess(data, _variables, context) {
+      queryClient.setQueryData<GetRoomQuestionsResponse>(['get-questions', roomId], (questions) => {
+        if (!questions) {
+          return questions;
+        }
+
+        if (!context.newQuestion) {
+          return questions;
+        }
+
+        return questions.map((question) => {
+          if (question.id === context.newQuestion.id) {
+            return {
+              ...context.newQuestion,
+              id: data.questionId,
+              answer: data.answer,
+              isGeneratingAnswer: false,
+            };
+          }
+
+          return question;
+        });
+      });
+    },
+
+    onError(_error, _variables, context) {
+      if (context?.questions) {
+        queryClient.setQueryData<GetRoomQuestionsResponse>(['get-questions', roomId], context.questions);
+      }
+    },
+    // onSuccess: () => {
+    //   queryClient.invalidateQueries({ queryKey: ['get-questions', roomId] });
+    // },
   });
 }
 
@@ -60,6 +117,8 @@ export function QuestionForm({ roomId }: QuestionFormProps) {
       question: '',
     },
   });
+
+  const { isSubmitting } = form.formState;
 
   async function handleCreateQuestion(data: CreateQuestionFormData) {
     await createQuestion(data);
@@ -81,14 +140,21 @@ export function QuestionForm({ roomId }: QuestionFormProps) {
                 <FormItem>
                   <FormLabel>Sua Pergunta</FormLabel>
                   <FormControl>
-                    <Textarea className='min-h-[100px]' placeholder='O que você gostaria de saber?' {...field} />
+                    <Textarea
+                      className='min-h-[100px]'
+                      disabled={isSubmitting}
+                      placeholder='O que você gostaria de saber?'
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <Button type='submit'>Enviar pergunta</Button>
+            <Button disabled={isSubmitting} type='submit'>
+              Enviar pergunta
+            </Button>
           </form>
         </Form>
       </CardContent>

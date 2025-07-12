@@ -15,6 +15,13 @@
       "when": 1752106820303,
       "tag": "0001_redundant_ken_ellis",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1752283833808,
+      "tag": "0002_aberrant_hammerhead",
+      "breakpoints": true
     }
   ]
 }
